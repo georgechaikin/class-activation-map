@@ -2,7 +2,6 @@ import tensorflow as tf
 import numpy as np
 
 from functools import partial
-import os
 
 def get_model(model_path):
     """Returns the model using predefined information
