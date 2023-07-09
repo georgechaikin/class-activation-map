@@ -24,6 +24,7 @@ def get_heatmaps(batch, model, class_index = None, **kwargs):
     else:
         cam_model = tf.keras.models.Model(inputs = model.input, outputs = model.layers[-1](model.layers[-3].output))
     # Preprocess the list of class indices
+    preds = class_index
     if class_index is None:
         preds = model.predict(batch)
         preds = tf.argmax(preds, axis = 1)
@@ -55,28 +56,34 @@ def get_superimposed_batch(batch, heatmaps, alpha=0.5):
     # Rescale heatmap to a range 0-255
     heatmaps = np.uint8(255 * heatmaps)
     # Use jet colormap to colorize heatmap
-    jet = matplotlib.colormaps['jet']
+    colormap = matplotlib.colormaps['viridis']
     # Use RGB values of the colormap
-    jet_colors = jet(np.arange(256))[:, :3]
-    jet_heatmaps = jet_colors[heatmaps]
+    colors = colormap(np.arange(256))[:, :3]
+    heatmaps = colors[heatmaps]
     # Create an image with RGB colorized heatmap
     resize_shape = (batch.shape[1], batch.shape[2])
-    jet_heatmaps = tf.image.resize(jet_heatmaps, resize_shape).numpy()
+    heatmaps = tf.image.resize(heatmaps, resize_shape).numpy()
     # Superimpose the heatmap on original image
-    superimposed_batch = (alpha * jet_heatmaps + (1-alpha)*batch)
+    superimposed_batch = (alpha * heatmaps + (1-alpha)*batch)
     superimposed_batch = tf.math.minimum(superimposed_batch, 1.)
     return superimposed_batch
 
 def save_superimposed_batch(img_dir, img_type, save_dir, **kwargs):
+    """Saves images with heatmaps
+
+    Args:
+        img_dir (str): the directory where images are stored
+        img_type (str): images type
+        save_dir: the directory where images with heatmaps should be stored
+        **kwargs: additional params for internal functions
+    """
     path_pattern = os.path.join(img_dir, f'*.{img_type}')
-    batch = get_batch(path_pattern, save_filepaths = True, **kwargs)
-    filepaths = tf.data.Dataset.load(os.path.join('tmp', 'filepaths'))
+    batch, filepaths = get_batch(path_pattern, save_filepaths = True, **kwargs)
     model = kwargs['model'] if 'model' in kwargs else get_model(**kwargs)
-    heatmaps = get_heatmaps(batch, model)
+    heatmaps = get_heatmaps(batch, model, **kwargs)
     superimposed_batch = get_superimposed_batch(batch, heatmaps, alpha=0.5)
-    if save_dir:
-        for filepath, cam_img in zip(filepaths, superimposed_batch):
-            filename = os.path.basename(bytes.decode(filepath.numpy()))
-            save_path = os.path.join(save_dir, filename)
-            tf.keras.utils.save_img(save_path, cam_img)
-    return superimposed_batch
+    for filepath, cam_img in zip(filepaths, superimposed_batch):
+        print(filepath)
+        filename = os.path.basename(bytes.decode(filepath))
+        save_path = os.path.join(save_dir, filename)
+        tf.keras.utils.save_img(save_path, cam_img)
