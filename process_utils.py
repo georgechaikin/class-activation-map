@@ -2,10 +2,9 @@ import tensorflow as tf
 import numpy as np
 
 from functools import partial
-import os
 
 def get_model(model_path):
-    """Returns model using predefined information
+    """Returns the model using predefined information
 
     Args:
         model_path (str): path to the Tensorflow model
@@ -34,26 +33,30 @@ def get_batch(path_pattern, **kwargs):
     """Loads images into the batch
     
     Arguments:
-        path_pattern (str): glob pattern for images
-        **kwargs: special arguments for list_files func
+        path_pattern (str, list): glob pattern for images or list of paths
+        **kwargs: special arguments for list_files func and for datasets preprocessing
     
     Returns:
         numpy.ndarray: numpy array with the shape (b,h,w,c)
+        tuple: tuple with the batch and file paths if save_filepaths is True
     """
-    shuffle = kwargs.get('shuffle', None)
-    seed = kwargs.get('seed', None)
+    shuffle = False
+    seed = None
     save_filepaths = kwargs.get('save_filepaths', False)
+    get_dataset = kwargs.get('get_dataset', False)
     # Define images paths
-    images_ds = tf.data.Dataset.list_files(
-        path_pattern,
-        shuffle = shuffle,
-        seed = seed)
-    images_ds.cache()
-    if save_filepaths:
-        filenames_path = os.path.join('tmp', 'filepaths')
-        os.makedirs(filenames_path, exist_ok = True)
-        images_ds.save(filenames_path)
+    if type(path_pattern) == list:
+        files_ds = tf.data.Dataset.from_generator(lambda: path_pattern, output_types=tf.string)
+    else:
+        files_ds = tf.data.Dataset.list_files(
+            path_pattern,
+            shuffle = shuffle,
+            seed = seed)
+    files_ds.cache()
     # Load images
     partial_load_img = partial(load_img, **kwargs)
-    images_ds = images_ds.map(partial_load_img)
-    return np.array(list(images_ds.as_numpy_iterator()))
+    images_ds = files_ds.map(partial_load_img)
+    if not get_dataset:
+        images_ds = np.array(list(images_ds.as_numpy_iterator()))
+        files_ds = list(files_ds.as_numpy_iterator())
+    return (images_ds, files_ds) if save_filepaths else images_ds
