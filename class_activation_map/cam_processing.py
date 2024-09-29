@@ -29,6 +29,7 @@ def get_heatmaps(
     class_indices = torch.LongTensor(class_indices)
     feature_extractor = torch.nn.Sequential(*list(model.children())[:-2])  # Exclude the last two layers (GAP and FC)
 
+    # Heatmaps extraction.
     features = feature_extractor(batch)
     heatmaps = model.fc(features.permute(0, 2, 3, 1))
     heatmaps = heatmaps.permute(0, 3, 1, 2)
@@ -36,7 +37,7 @@ def get_heatmaps(
         heatmaps = heatmaps[:, class_indices, :, :]
 
     # Normalize heatmaps.
-    heatmaps = torch.where(heatmaps > 0, heatmaps, 0) / torch.max(heatmaps)
+    heatmaps = torch.where(heatmaps > 0, heatmaps, 0) / torch.amax(heatmaps, dim=(2, 3), keepdim=True)
     return heatmaps
 
 
