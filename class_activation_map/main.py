@@ -52,6 +52,7 @@ def save_heatmaps(img_dir: str | os.PathLike, save_dir: str | os.PathLike, batch
     torch.set_grad_enabled(False)
     model = resnet50(weights=ResNet50_Weights.IMAGENET1K_V2)
     model.eval()
+    model.to(device)
 
     # Define the dataloader.
     transform = transforms.Compose(
@@ -73,10 +74,11 @@ def save_heatmaps(img_dir: str | os.PathLike, save_dir: str | os.PathLike, batch
     for batch in data_loader:
         images, img_paths = batch["img_tensor"], batch["img_path"]
         img_tensors = normalize(images)
+        img_tensors = img_tensors.to(device)
         # Get heatmaps.
         heatmaps = get_heatmaps(img_tensors, model, class_indices)
-        # Add heatmaps to images
-        images = get_images_with_heatmaps(images, heatmaps)
+        # Add heatmaps to images.
+        images = get_images_with_heatmaps(images.cpu(), heatmaps.cpu())
         # Modify image paths corresponding to class indices.
         cam_img_paths = []
         for class_id, img_path in product(class_indices, img_paths):
