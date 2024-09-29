@@ -15,6 +15,7 @@ from tqdm import tqdm
 from class_activation_map.cam_processing import get_heatmaps, get_images_with_heatmaps
 from class_activation_map.data_processing import ImageDataset
 
+
 def save_images(images: torch.Tensor, img_names: List[str | os.PathLike], save_dir: str | os.PathLike) -> None:
     """Saves images.
 
@@ -22,7 +23,7 @@ def save_images(images: torch.Tensor, img_names: List[str | os.PathLike], save_d
         images: Batch of images (batch_size, height, width, channels).
         img_names: List of image names or image paths.
         save_dir: Directory for new images.
-        
+
     Raises:
         ValueError: If the number of images does not match the number of image_names.
     """
@@ -41,9 +42,12 @@ def save_images(images: torch.Tensor, img_names: List[str | os.PathLike], save_d
 @click.command()
 @click.argument("img-dir", type=click.Path(dir_okay=True, exists=True))
 @click.argument("save-dir", type=click.Path(dir_okay=True, exists=False))
-@click.option("--batch-size", type=int, default=32)
+@click.option("-c", "--class-index", multiple=True, type=int, default=[207, 251], help="Class index.")
+@click.option("--batch-size", type=int, default=32, help="Batch size.")
 @click.option("-v", "--verbose", is_flag=True, default=False, show_default=True, help="Progress bar on/off.")
-def save_heatmaps(img_dir: str | os.PathLike, save_dir: str | os.PathLike, batch_size: int, verbose: bool):
+def save_heatmaps(
+    img_dir: str | os.PathLike, save_dir: str | os.PathLike, class_index: List[int], batch_size: int, verbose: bool
+):
     """Saves heatmaps for images in IMG_DIR to SAVE_DIR."""
     img_dir = Path(img_dir)
 
@@ -68,7 +72,6 @@ def save_heatmaps(img_dir: str | os.PathLike, save_dir: str | os.PathLike, batch
 
     # Batch iteration.
     disable = not verbose
-    class_indices = [207, 251, 271, 923]
     progress_bar = tqdm(total=len(ds), disable=disable)
     step = data_loader.batch_size
     for batch in data_loader:
@@ -76,12 +79,12 @@ def save_heatmaps(img_dir: str | os.PathLike, save_dir: str | os.PathLike, batch
         img_tensors = normalize(images)
         img_tensors = img_tensors.to(device)
         # Get heatmaps.
-        heatmaps = get_heatmaps(img_tensors, model, class_indices)
+        heatmaps = get_heatmaps(img_tensors, model, class_index)
         # Add heatmaps to images.
         images = get_images_with_heatmaps(images.cpu(), heatmaps.cpu())
         # Modify image paths corresponding to class indices.
         cam_img_paths = []
-        for class_id, img_path in product(class_indices, img_paths):
+        for class_id, img_path in product(class_index, img_paths):
             img_path = Path(img_path)
             img_path = img_path.with_stem(img_path.stem + "_" + str(class_id))
             cam_img_paths.append(img_path)
