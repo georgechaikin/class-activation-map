@@ -1,0 +1,36 @@
+[tool.poetry]
+name = "class-activation-map"
+version = "0.1.0"
+description = "Class activation maps (CAM) for image batches"
+authors = ["Georgii Chaikin <chaykin.georgiy217@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+torch = { version = "^2.4.0+cu118", source = "torch_gpu" }
+torchvision = { version = "^0.19.0+cu118", source = "torch_gpu" }
+click = "^8.1.7"
+tqdm = "^4.66.5"
+matplotlib = "^3.9.2"
+
+[[tool.poetry.source]]
+name = "torch_gpu"
+url = "https://download.pytorch.org/whl/cu118"
+priority = "explicit"
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.8.0"
+jupyterlab = "^4.2.5"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 120
+
+[tool.poetry.scripts]
+save_heatmaps = "class_activation_map.main:save_heatmaps"
+
+
