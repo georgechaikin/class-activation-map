@@ -47,9 +47,11 @@ def save_heatmaps(img_dir: str | os.PathLike, save_dir: str | os.PathLike, batch
     """Saves heatmaps for images in IMG_DIR to SAVE_DIR."""
     img_dir = Path(img_dir)
 
-    # Define models.
+    # Define the model and turn on eval options.
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     torch.set_grad_enabled(False)
     model = resnet50(weights=ResNet50_Weights.IMAGENET1K_V2)
+    model.eval()
 
     # Define the dataloader.
     transform = transforms.Compose(
