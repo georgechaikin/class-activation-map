@@ -16,7 +16,7 @@ from class_activation_map.cam_processing import get_heatmaps, get_images_with_he
 from class_activation_map.data_processing import ImageDataset
 
 
-def save_images(images: torch.Tensor, img_names: List[str | os.PathLike], save_dir: str | os.PathLike) -> None:
+def save_images(images: torch.Tensor, img_names: List[Path], save_dir: Path) -> None:
     """Saves images.
 
     Args:
@@ -32,9 +32,9 @@ def save_images(images: torch.Tensor, img_names: List[str | os.PathLike], save_d
             f"The number of images does not match the number of image names:"
             f"{images.shape[0]} and {len(img_names)} respectively."
         )
-    save_dir = Path(save_dir)
+
     for img_name, img in zip(img_names, images):
-        img_path = save_dir / Path(img_name).name
+        img_path = save_dir / img_name.name
         image = to_pil_image(img)
         image.save(img_path)
 
@@ -49,7 +49,12 @@ def save_heatmaps(
     img_dir: str | os.PathLike, save_dir: str | os.PathLike, class_index: List[int], batch_size: int, verbose: bool
 ):
     """Saves heatmaps for images in IMG_DIR to SAVE_DIR."""
+
+    # Directories preprocessing.
     img_dir = Path(img_dir)
+    save_dir = Path(save_dir)
+    if not save_dir.exists():
+        save_dir.mkdir()
 
     # Define the model and turn on eval options.
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
