@@ -3,6 +3,7 @@ name = "class-activation-map"
 version = "0.1.0"
 description = "Class activation maps (CAM) for image batches"
 authors = ["Georgii Chaikin <chaykin.georgiy217@gmail.com>"]
+license = "MIT"
 readme = "README.md"
 
 [tool.poetry.dependencies]
