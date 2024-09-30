@@ -47,8 +47,8 @@ def save_images(images: torch.Tensor, img_names: List[Path], save_dir: Path) -> 
 @click.option("-v", "--verbose", is_flag=True, default=False, show_default=True, help="Progress bar on/off.")
 def save_heatmaps(
     img_dir: str | os.PathLike, save_dir: str | os.PathLike, class_index: List[int], batch_size: int, verbose: bool
-):
-    """Saves heatmaps for images in IMG_DIR to SAVE_DIR."""
+) -> None:
+    """Saves heatmaps for images in IMG_DIR to SAVE_DIR (with ResNet50 model)."""
 
     # Directories preprocessing.
     img_dir = Path(img_dir)
@@ -70,7 +70,6 @@ def save_heatmaps(
             transforms.ToTensor(),
         ]
     )
-
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ds = ImageDataset(img_dir, transform)
     data_loader = DataLoader(ds, batch_size=batch_size, shuffle=False)
@@ -95,4 +94,5 @@ def save_heatmaps(
             cam_img_paths.append(img_path)
         # Write images to save_dir.
         save_images(images, cam_img_paths, save_dir)
+        # Progress bar update.
         progress_bar.update(step)
