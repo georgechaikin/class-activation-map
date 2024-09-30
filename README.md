@@ -27,6 +27,8 @@ poetry build --format wheel
 # Create and activate virtual environment
 python -m venv venv
 source venv/bin/activate # There is another command for Windows: venv/Scripts/activate
+# Install the package.
+pip install dist/class_activation_map-0.1.0-py3-none-any.whl
 # Run the script.
 save_heatmaps data/images data/cam-images -c 207 -c 251
 ```
