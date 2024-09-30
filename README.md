@@ -30,7 +30,8 @@ source venv/bin/activate # There is another command for Windows: venv/Scripts/ac
 # Run the script.
 save_heatmaps data/images data/cam-images -c 207 -c 251
 ```
-Also, you can use Python functions instead of console scripts. There is an example in [cam-example.ipynb](https://github.com/georgechaikin/class-activation-map/blob/main/notebooks/cam-example.ipynb)
+Also, you can use Python functions instead of console scripts.
+There is ```save_heatmaps``` script implementation in [main.py](https://github.com/georgechaikin/class-activation-map/blob/main/class_activation_map/main.py).
 
 ## Available scripts
 - save_heatmaps:
